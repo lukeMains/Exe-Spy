@@ -1,0 +1,51 @@
+[project]
+name = "exespy"
+version = "1.0.1"
+dependencies = [
+  "iced-x86>=1.21.0",
+  "icoextract>=0.1.5",
+  "lief>=0.16.3",
+  "matplotlib>=3.7.5",
+  "pefile>=2024.8.26",
+  "pyside6>=6.6.3.1",
+  "python-magic>=0.4.27 ; sys_platform != 'darwin' and sys_platform != 'win32'",
+  "python-magic-bin>=0.4.14 ; sys_platform == 'darwin' or sys_platform == 'win32'",
+  "vt-py>=0.19.0",
+  "yara-python>=4.5.1",
+]
+requires-python = ">=3.8"
+description = "Cross-platform PE viewer"
+authors = [{ name = "Andy Smith" }]
+readme = "README.md"
+license = { file = "LICENSE" }
+keywords = ["pe", "forensics", "windows forensics", "forensics tools"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+  "Operating System :: OS Independent",
+  "Environment :: Win32 (MS Windows)",
+  "Environment :: X11 Applications",
+  "Environment :: X11 Applications :: Qt",
+  "Environment :: MacOS X",
+]
+
+[project.urls]
+Homepage = "https://ajsmith.org/projects/exespy/"
+Repository = "https://github.com/andyjsmith/Exe-Spy"
+
+[project.gui-scripts]
+exespy = "exespy.exespy:main"
+
+[dependency-groups]
+dev = ["exespy"]
+
+[tool.uv.sources]
+exespy = { workspace = true }
+
+[tool.setuptools]
+packages = ["exespy"]
