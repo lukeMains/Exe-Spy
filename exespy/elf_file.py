@@ -1,0 +1,80 @@
+import logging
+import os
+import time
+
+from elftools.elf import elffile
+
+from . import utils
+
+
+class ELFFile:
+    """Base class for representing an ELF file"""
+
+    def __init__(self, path: str):
+        """
+        Initialize the ELFFile object
+        :param path: Path to the ELF file
+        """
+
+        self.logger = logging.getLogger("exespy")
+        self.logger.info("Loading ELF file: " + path)
+
+        init_start = time.time()
+
+        self.path = path
+        self.name = os.path.basename(path)
+        self.stat = os.stat(path)
+
+        # Read the ELF file into memory so it can be reused
+        with open(path, "rb") as f:
+            self.data = f.read()
+            f.seek(os.SEEK_SET)  # reset back to beginning
+            self.elf = elffile.ELFFile(f)
+
+        self.__calculated_checksum = None
+
+        self.sha256 = self.calculate_sha256()
+
+        # Resources
+
+        self.logger.debug(
+            f"ELFFile init finished in {time.time() - init_start:.4f} seconds"
+        )
+
+    def type(self) -> str:
+        """Return the type of the ELF file (executable, shared object, etc.)"""
+        if type := self.elf.structs.e_type:
+            return type
+        else:
+            return "Unknown"
+
+    def architecture(self) -> str:
+        """Return the architecture of the ELF file"""
+        return self.elf.get_machine_arch()
+
+    def is_x86(self) -> bool:
+        """TODO"""
+        return self.architecture() == "x86" or self.architecture() == "x86_64"
+
+    def is_32bit(self) -> bool:
+        """TODO"""
+        self.logger.error("FIXME: is_32bit()")
+        return False
+
+    def is_64bit(self) -> bool:
+        """TODO"""
+        self.logger.error("FIXME: is_64bit()")
+        return True
+
+    def entrypoint(self) -> int:
+        """Returns the entrypoint of the ELF file"""
+        if addr := self.elf.header["e_entry"]:
+            return addr
+        else:
+            return 0
+
+    def strings(self, min_size=10) -> "set[str]":
+        return utils.strings(self.data, min_size)
+
+    def calculate_sha256(self) -> str:
+        return utils.calculate_sha256(self.data)

@@ -1,5 +1,3 @@
-import hashlib
-import io
 import logging
 import os
 import time
@@ -7,6 +5,8 @@ from dataclasses import dataclass
 
 import lief
 import pefile
+
+from . import utils
 
 
 @dataclass
@@ -242,40 +242,8 @@ class PEFile:
 
         return resources
 
-    def strings(self, min_length=10) -> "list[str]":
-        """Return a list of strings from the PE file"""
-        strings = []
-        with io.BytesIO(self.data) as f:
-            current_string = b""
-            byte = f.read(1)
-
-            while byte:
-                if b" " <= byte <= b"~":
-                    current_string += byte
-                else:
-                    if len(current_string) >= min_length:
-                        strings.append(
-                            (
-                                current_string.decode("ascii"),
-                                f.tell() - len(current_string) - 1,
-                            )
-                        )
-                    current_string = b""
-                byte = f.read(1)
-
-            if len(current_string) >= min_length:
-                strings.append(
-                    (current_string.decode("ascii"), f.tell() - len(current_string))
-                )
-
-        return strings
+    def strings(self, min_length=10) -> "set[str]":
+        return utils.strings(self.data, min_length)
 
     def calculate_sha256(self) -> str:
-        """Generate a SHA256 hash of the PE file"""
-        sha256 = hashlib.sha256()
-        # Calculate the hashes while only looping through the file once
-        with io.BytesIO(self.data) as f:
-            # Read the file in chunks of 4096 bytes
-            for byte_block in iter(lambda: f.read(4096), b""):
-                sha256.update(byte_block)
-        return sha256.hexdigest()
+        return utils.calculate_sha256(self.data)
