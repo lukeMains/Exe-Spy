@@ -8,8 +8,10 @@ import PySide6.QtWidgets as QtWidgets
 import PySide6.QtCore as QtCore
 
 import pefile
+import elftools
 
 from . import pe_file
+from . import elf_file
 from . import tab_view
 from . import license_dialog
 from . import helpers
@@ -59,10 +61,15 @@ class ExeSpy(QtWidgets.QMainWindow):
 
         # Set up file menu
         file_menu = QtWidgets.QMenu("&File", self)
-        open_action = QtGui.QAction("Open PE", self)
-        open_action.setShortcut(QtGui.QKeySequence.Open)
-        open_action.triggered.connect(self.show_open_file)
-        file_menu.addAction(open_action)
+        open_pe_action = QtGui.QAction("Open PE", self)
+        open_pe_action.setShortcut(QtGui.QKeySequence.Open)
+        open_pe_action.triggered.connect(self.show_open_pe_file)
+        open_elf_action = QtGui.QAction("Open ELF", self)
+        # open_elf_action.setShortcut()  # TODO?
+        open_elf_action.triggered.connect(self.show_open_elf_file)
+        file_menu.addAction(open_elf_action)
+        file_menu.addSeparator()
+        file_menu.addAction(open_pe_action)
         file_menu.addSeparator()
         quit_action = QtGui.QAction("Quit", self)
         quit_action.triggered.connect(self.close)
@@ -132,13 +139,13 @@ class ExeSpy(QtWidgets.QMainWindow):
         license = license_dialog.LicenseDialog(self)
         license.exec()
 
-    def show_open_file(self):
+    def show_open_pe_file(self):
         """Show the open file dialog"""
         file_selection = QtWidgets.QFileDialog.getOpenFileName(
             self,
             "Open PE File",
             self.settings.value("file/last_open_dir", "", str),
-            "PE Files (*.exe *.dll *.com *.ocx *.sys *.scr *.cpl *.ax *.acm *.winmd *.mui *.mun *.efi *.tsp *.drv);;All files (*.*)",
+            "PE Files (*.exe *.dll *.com *.ocx *.sys *.scr *.cpl *.ax *.acm *.winmd *.mui *.mun *.efi *.tsp *.drv);;All files (*)",
         )
 
         if (
@@ -150,6 +157,27 @@ class ExeSpy(QtWidgets.QMainWindow):
                 "file/last_open_dir", os.path.dirname(file_selection[0])
             )
             self.load_pe(file_selection[0])
+
+        self.statusBar().clearMessage()
+
+    def show_open_elf_file(self):
+        """Show the open file dialog"""
+        file_selection = QtWidgets.QFileDialog.getOpenFileName(
+            self,
+            "Open ELF File",
+            self.settings.value("file/last_open_dir", "", str),
+            "All files (*)",
+        )
+
+        if (
+            isinstance(file_selection, tuple)
+            and len(file_selection) > 0
+            and len(file_selection[0]) > 0
+        ):
+            self.settings.setValue(
+                "file/last_open_dir", os.path.dirname(file_selection[0])
+            )
+            self.load_elf(file_selection[0])
 
         self.statusBar().clearMessage()
 
@@ -189,7 +217,7 @@ class ExeSpy(QtWidgets.QMainWindow):
             self.progress_bar.setValue(0)
             self.statusBar().showMessage("Loading...")
             QtCore.QCoreApplication.processEvents()
-            self.pe = pe_file.PEFile(path)
+            self.exe = pe_file.PEFile(path)
         except pefile.PEFormatError:
             helpers.show_message_box(
                 "Not a valid PE file", alert_type=helpers.MessageBoxTypes.CRITICAL
@@ -199,7 +227,32 @@ class ExeSpy(QtWidgets.QMainWindow):
                 "File not found", alert_type=helpers.MessageBoxTypes.CRITICAL
             )
         else:
-            state.tabview.load(self.pe)
+            state.tabview.load(self.exe)
+        finally:
+            self.statusBar().clearMessage()
+            self.progress_bar.hide()
+
+    def load_elf(self, path: str):
+        """Load an ELF file and begin parsing"""
+        try:
+            self.tab_container_layout.removeWidget(state.tabview)
+            state.tabview = tab_view.TabView(self)
+            self.tab_container_layout.addWidget(state.tabview)
+            self.progress_bar.show()
+            self.progress_bar.setValue(0)
+            self.statusBar().showMessage("Loading...")
+            QtCore.QCoreApplication.processEvents()
+            self.exe = elf_file.ELFFile(path)
+        except elftools.common.exceptions.ELFError:
+            helpers.show_message_box(
+                "Not a valid ELF file", alert_type=helpers.MessageBoxTypes.CRITICAL
+            )
+        except FileNotFoundError:
+            helpers.show_message_box(
+                "File not found", alert_type=helpers.MessageBoxTypes.CRITICAL
+            )
+        else:
+            state.tabview.load(self.exe)
         finally:
             self.statusBar().clearMessage()
             self.progress_bar.hide()
