@@ -66,6 +66,11 @@ class ELFFile:
         self.logger.error("FIXME: is_64bit()")
         return True
 
+    # TODO: Does a build timestamp exist in ELF files, maybe DWARF info?
+    def timestamp(self) -> int:
+        """TODO"""
+        return -1
+
     def entrypoint(self) -> int:
         """Returns the entrypoint of the ELF file"""
         if addr := self.elf.header["e_entry"]:
