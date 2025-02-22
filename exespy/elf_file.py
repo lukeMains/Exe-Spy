@@ -37,9 +37,7 @@ class ELFFile:
 
         # Resources
 
-        self.logger.debug(
-            f"ELFFile init finished in {time.time() - init_start:.4f} seconds"
-        )
+        self.logger.debug(f"ELFFile init finished in {time.time() - init_start:.4f} seconds")
 
     def calculate_checksum(self) -> int:
         """Not relevant to ELF files so returns 0"""
