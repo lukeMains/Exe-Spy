@@ -83,19 +83,20 @@ class GeneralView(QtWidgets.QScrollArea):
 
         self.file_name.setText(exe.name)
 
-        try:
-            icon = icoextract.IconExtractor(exe.path).get_icon()
-            icon.seek(0)
-            icon_bytes = icon.read()
+        if isinstance(exe, pe_file.PEFile):
+            try:
+                icon = icoextract.IconExtractor(exe.path).get_icon()
+                icon.seek(0)
+                icon_bytes = icon.read()
 
-            pixmap = QtGui.QPixmap()
-            pixmap.loadFromData(icon_bytes)
-            pixmap = pixmap.scaled(
-                48, 48, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation
-            )
-            self.icon.setPixmap(pixmap)
-        except icoextract.IconExtractorError:
-            pass
+                pixmap = QtGui.QPixmap()
+                pixmap.loadFromData(icon_bytes)
+                pixmap = pixmap.scaled(
+                    48, 48, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation
+                )
+                self.icon.setPixmap(pixmap)
+            except icoextract.IconExtractorError:
+                pass
 
         # File Metadata
         c_time = helpers.format_time(exe.stat.st_ctime)
@@ -123,14 +124,14 @@ class GeneralView(QtWidgets.QScrollArea):
                 (
                     helpers.format_time(exe.timestamp())
                     if isinstance(exe, pe_file.PEFile)
-                    else "N/A"
+                    else "-"
                 ),
             ),
             ("Type", exe.type()),
             ("Architecture", exe.architecture()),
             (
                 "Subsystem",
-                exe.subsystem() if isinstance(exe, pe_file.PEFile) else "N/A",
+                exe.subsystem() if isinstance(exe, pe_file.PEFile) else "-",
             ),
             (
                 "Image Base",
@@ -143,7 +144,7 @@ class GeneralView(QtWidgets.QScrollArea):
             ("Entrypoint", hex(exe.entrypoint())),
             (
                 "Signature",
-                exe.verify_signature() if isinstance(exe, pe_file.PEFile) else "N/",
+                exe.verify_signature() if isinstance(exe, pe_file.PEFile) else "-",
             ),
         ]
         self.image_group.view.setModel(
@@ -161,7 +162,7 @@ class GeneralView(QtWidgets.QScrollArea):
                         (
                             self.exe.verify_checksum()
                             if isinstance(self.exe, pe_file.PEFile)
-                            else "N/A"
+                            else "-"
                         ),
                     )
                 ]
