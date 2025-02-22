@@ -41,6 +41,13 @@ class ELFFile:
             f"ELFFile init finished in {time.time() - init_start:.4f} seconds"
         )
 
+    def calculate_checksum(self) -> int:
+        """Not relevant to ELF files so returns 0"""
+        if self.__calculated_checksum is None:
+            self.__calculated_checksum = 0
+
+        return self.__calculated_checksum
+
     def type(self) -> str:
         """Return the type of the ELF file (executable, shared object, etc.)"""
         if type := self.elf.structs.e_type:
