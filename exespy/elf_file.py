@@ -3,6 +3,7 @@ import os
 import time
 
 from elftools.elf import elffile
+from .readelf import ReadElf
 
 from . import utils
 
@@ -26,10 +27,8 @@ class ELFFile:
         self.stat = os.stat(path)
 
         # Read the ELF file into memory so it can be reused
-        with open(path, "rb") as f:
-            self.data = f.read()
-            f.seek(os.SEEK_SET)  # reset back to beginning
-            self.elf = elffile.ELFFile(f)
+        self.readelf = ReadElf(open(path, "rb"), None)
+        self.elf = self.readelf.elffile
 
         self.__calculated_checksum = None
 
@@ -37,7 +36,9 @@ class ELFFile:
 
         # Resources
 
-        self.logger.debug(f"ELFFile init finished in {time.time() - init_start:.4f} seconds")
+        self.logger.debug(
+            f"ELFFile init finished in {time.time() - init_start:.4f} seconds"
+        )
 
     def calculate_checksum(self) -> int:
         """Not relevant to ELF files so returns 0"""
@@ -84,7 +85,7 @@ class ELFFile:
             return 0
 
     def strings(self, min_size=10) -> "set[str]":
-        return utils.strings(self.data, min_size)
+        return utils.strings(self.elf.stream.read(), min_size)
 
     def calculate_sha256(self) -> str:
-        return utils.calculate_sha256(self.data)
+        return utils.calculate_sha256(self.elf.stream.read())
