@@ -1,0 +1,6 @@
+{
+  "typeCheckingMode": "standard",
+  "reportOptionalSubscript": false,
+  "reportOptionalMemberAccess": false,
+  "reportAttributeAccessIssue": false
+}

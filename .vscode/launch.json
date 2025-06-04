@@ -5,13 +5,34 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Python: PE Viewer",
-			"type": "python",
+			"env": {
+				"DISPLAY": "192.168.56.1:0.0"
+			},
+			"name": "Debug ELF File",
+			"type": "debugpy",
 			"request": "launch",
-			"program": "run.py",
+			"program": "run.pyw",
 			"console": "integratedTerminal",
 			"cwd": "${workspaceFolder}",
-			"args": ["C:\\Users\\Andy\\Downloads\\notepad.exe", "--debug"]
+			"args": [
+				"${workspaceFolder}/tests/ls",
+				"--debug"
+			]
+		},
+		{
+			"env": {
+				"DISPLAY": "192.168.56.1:0.0"
+			},
+			"name": "Debug PE File",
+			"type": "debugpy",
+			"request": "launch",
+			"program": "run.pyw",
+			"console": "integratedTerminal",
+			"cwd": "${workspaceFolder}",
+			"args": [
+				"${workspaceFolder}/tests/where.exe",
+				"--debug"
+			]
 		}
 	]
 }

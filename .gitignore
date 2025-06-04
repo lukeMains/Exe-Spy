@@ -134,3 +134,4 @@ sample_hives/
 qdarkstyle/
 
 .python-version
+tests
