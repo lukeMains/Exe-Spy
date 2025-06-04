@@ -7,7 +7,7 @@ import PySide6.QtWidgets as QtWidgets
 import PySide6.QtGui as QtGui
 
 from . import helpers
-from . import pe_file
+from . import pe_file, elf_file
 from .views import (
     view,
     general,
@@ -31,14 +31,14 @@ from .views import (
 class LoadWorker(QtCore.QObject):
     finished = QtCore.Signal()
 
-    def __init__(self, tab: QtWidgets.QWidget, pe: pe_file.PEFile):
+    def __init__(self, tab: QtWidgets.QWidget, exe: pe_file.PEFile | elf_file.ELFFile):
         super().__init__()
         self.tab = tab
-        self.pe = pe
+        self.exe = exe
 
     def run(self):
         load_start = time.time()
-        self.tab.load_async(self.pe)
+        self.tab.load_async(self.exe)
         load_end = time.time()
         logging.getLogger("exespy").debug(
             f"{self.tab.NAME} (ASYNC) took {load_end - load_start:.4f} seconds"
@@ -115,7 +115,7 @@ class TabView(QtWidgets.QTabWidget):
             if tab_name != general.GeneralView.NAME:
                 self.set_disabled(tab_name, True)
 
-    def load(self, pe: pe_file.PEFile):
+    def load(self, exe: pe_file.PEFile | elf_file.ELFFile):
         """Loop through all tabs and call their update function"""
         self.window().progress_bar.setMaximum(len(self.tabs))
 
@@ -133,7 +133,7 @@ class TabView(QtWidgets.QTabWidget):
                 if hasattr(tab, "LOAD_ASYNC") and tab.LOAD_ASYNC:
                     # Asynchronous load
                     tab.load_thread = QtCore.QThread()
-                    tab.load_worker = LoadWorker(tab, pe)
+                    tab.load_worker = LoadWorker(tab, exe)
                     tab.load_worker.moveToThread(tab.load_thread)
                     tab.load_thread.started.connect(tab.load_worker.run)
                     tab.load_worker.finished.connect(tab.load_thread.quit)
@@ -144,8 +144,8 @@ class TabView(QtWidgets.QTabWidget):
                     tab.load_thread.finished.connect(tab.enable_tab)
                 else:
                     # Synchronous load
-                    tab.load(pe)
-                    self.set_disabled(tab_name, False)
+                    tab.load(exe)
+                    self.set_disabled(tab_name, disabled=False)
 
             logging.getLogger("exespy").debug(
                 f"{tab_name} took {time.time() - load_start:.4f} seconds"

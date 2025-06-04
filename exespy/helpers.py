@@ -2,6 +2,7 @@ import os
 import sys
 import datetime
 from dateutil import tz
+from enum import Enum
 
 import PySide6.QtWidgets as QtWidgets
 import PySide6.QtCore as QtCore
@@ -43,26 +44,27 @@ def resource_path(relative_path: str) -> str:
     return os.path.join(base_path, relative_path)
 
 
-class MessageBoxTypes:
-    INFORMATION = (QtWidgets.QMessageBox.Information, "Information")
-    WARNING = (QtWidgets.QMessageBox.Warning, "Warning")
-    CRITICAL = (QtWidgets.QMessageBox.Critical, "Error")
-    QUESTION = (QtWidgets.QMessageBox.Question, "Question")
+class MessageBoxTypes(Enum):
+    INFORMATION = (QtWidgets.QMessageBox.Icon.Information, "Information")
+    WARNING = (QtWidgets.QMessageBox.Icon.Warning, "Warning")
+    CRITICAL = (QtWidgets.QMessageBox.Icon.Critical, "Error")
+    QUESTION = (QtWidgets.QMessageBox.Icon.Question, "Question")
 
 
 def show_message_box(
     text: str,
     alert_type: MessageBoxTypes = MessageBoxTypes.INFORMATION,
-    title: str = None,
+    title: str | None = None,
 ) -> int:
     """Show a message box with the given text and alert type"""
+    icon, default_title = alert_type.value
     msgbox = QtWidgets.QMessageBox()
     if title is None:
-        msgbox.setWindowTitle(alert_type[1])
+        msgbox.setWindowTitle(default_title)
     else:
         msgbox.setWindowTitle(title)
     msgbox.setText(text)
-    msgbox.setIcon(alert_type[0])
+    msgbox.setIcon(icon)
     return msgbox.exec()
 
 

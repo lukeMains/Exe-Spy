@@ -7,6 +7,8 @@ import PySide6.QtGui as QtGui
 import PySide6.QtWidgets as QtWidgets
 import PySide6.QtCore as QtCore
 
+from polyfile.magic import MagicMatcher
+
 import pefile
 import elftools
 
@@ -61,15 +63,10 @@ class ExeSpy(QtWidgets.QMainWindow):
 
         # Set up file menu
         file_menu = QtWidgets.QMenu("&File", self)
-        open_pe_action = QtGui.QAction("Open PE", self)
-        open_pe_action.setShortcut(QtGui.QKeySequence.Open)
-        open_pe_action.triggered.connect(self.show_open_pe_file)
-        open_elf_action = QtGui.QAction("Open ELF", self)
-        # open_elf_action.setShortcut()  # TODO?
-        open_elf_action.triggered.connect(self.show_open_elf_file)
-        file_menu.addAction(open_elf_action)
-        file_menu.addSeparator()
-        file_menu.addAction(open_pe_action)
+        open_file_action = QtGui.QAction("Open File", self)
+        open_file_action.setShortcut(QtGui.QKeySequence.StandardKey.Open)
+        open_file_action.triggered.connect(self.show_open_file)
+        file_menu.addAction(open_file_action)
         file_menu.addSeparator()
         quit_action = QtGui.QAction("Quit", self)
         quit_action.triggered.connect(self.close)
@@ -80,7 +77,7 @@ class ExeSpy(QtWidgets.QMainWindow):
         view_menu = QtWidgets.QMenu("&View", self)
         self.native_style_action = QtGui.QAction("Use native style", self)
         self.native_style_action.setCheckable(True)
-        self.native_style_action.setChecked(use_native_style)
+        self.native_style_action.setChecked(bool(use_native_style))
         self.native_style_action.toggled.connect(self.toggle_style)
         view_menu.addAction(self.native_style_action)
         self.menuBar().addMenu(view_menu)
@@ -139,33 +136,12 @@ class ExeSpy(QtWidgets.QMainWindow):
         license = license_dialog.LicenseDialog(self)
         license.exec()
 
-    def show_open_pe_file(self):
+    def show_open_file(self):
         """Show the open file dialog"""
         file_selection = QtWidgets.QFileDialog.getOpenFileName(
             self,
-            "Open PE File",
-            self.settings.value("file/last_open_dir", "", str),
-            "PE Files (*.exe *.dll *.com *.ocx *.sys *.scr *.cpl *.ax *.acm *.winmd *.mui *.mun *.efi *.tsp *.drv);;All files (*)",
-        )
-
-        if (
-            isinstance(file_selection, tuple)
-            and len(file_selection) > 0
-            and len(file_selection[0]) > 0
-        ):
-            self.settings.setValue(
-                "file/last_open_dir", os.path.dirname(file_selection[0])
-            )
-            self.load_pe(file_selection[0])
-
-        self.statusBar().clearMessage()
-
-    def show_open_elf_file(self):
-        """Show the open file dialog"""
-        file_selection = QtWidgets.QFileDialog.getOpenFileName(
-            self,
-            "Open ELF File",
-            self.settings.value("file/last_open_dir", "", str),
+            "Open File",
+            str(self.settings.value("file/last_open_dir", "", str)),
             "All files (*)",
         )
 
@@ -177,7 +153,27 @@ class ExeSpy(QtWidgets.QMainWindow):
             self.settings.setValue(
                 "file/last_open_dir", os.path.dirname(file_selection[0])
             )
-            self.load_elf(file_selection[0])
+            path = file_selection[0]
+
+            logging.getLogger(name="exespy").debug(f"Opening file: {path}")
+            with open(path, "rb") as f:
+                if matches := MagicMatcher.DEFAULT_INSTANCE.match(f.read()):
+                    for match in matches:
+                        logging.getLogger(name="exespy").debug(
+                            f"Matches file type: {match.message()}"
+                        )
+                        file_type_description = match.message()
+                        if "PE32+" in file_type_description:
+                            self.load_pe(path)
+                            break
+                        elif "ELF" in file_type_description:
+                            self.load_elf(path)
+                            break
+                        else:
+                            helpers.show_message_box(
+                                f"File type not supported:\n{file_type_description}",
+                                alert_type=helpers.MessageBoxTypes.CRITICAL,
+                            )
 
         self.statusBar().clearMessage()
 
@@ -187,7 +183,7 @@ class ExeSpy(QtWidgets.QMainWindow):
             self,
             "Set VirusTotal API Key",
             "API Key",
-            text=self.settings.value("virustotal/api_key", ""),
+            text=str(self.settings.value("virustotal/api_key", "")),
         )
 
         if api_key[1]:
@@ -254,6 +250,8 @@ class ExeSpy(QtWidgets.QMainWindow):
         else:
             state.tabview.load(self.exe)
         finally:
+            # TODO: Disable tabs that don't matter for ELF files
+            state.tabview.set_disabled("resources", disabled=True)
             self.statusBar().clearMessage()
             self.progress_bar.hide()
 
@@ -309,7 +307,18 @@ def main():
 
     # Process command-line file
     if args.file is not None:
-        exe_spy.load_pe(args.file)
+        with open(args.file, "rb") as f:
+            if matches := MagicMatcher.DEFAULT_INSTANCE.match(f.read()):
+                for match in matches:
+                    file_type_description = match.message()
+                    if "PE32+" in file_type_description:
+                        exe_spy.load_pe(args.file)
+                        break
+                    elif "ELF" in file_type_description:
+                        exe_spy.load_elf(args.file)
+                        break
+                    else:
+                        pass
 
     # Run the app
     sys.exit(app.exec())
