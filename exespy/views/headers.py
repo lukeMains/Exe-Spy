@@ -257,8 +257,6 @@ class HeadersView(QtWidgets.QScrollArea):
         self.elf_file_header_group = table.TableGroup(
             "ELF Header", fit_columns=True, headers=elf_hdr_cols
         )
-        layout.addWidget(self.elf_file_header_group)
-
         # ELF Header Values
         # Descriptions gathered from https://en.wikipedia.org/wiki/Executable_and_Linkable_Format
         # or https://man7.org/linux/man-pages/man5/elf.5.html
@@ -369,19 +367,38 @@ class HeadersView(QtWidgets.QScrollArea):
                 headers=elf_hdr_cols,
             )
         )
+        layout.addWidget(self.elf_file_header_group)
 
-        # COFF File Header
+        # Program Headers
         program_hdr_cols = ["Name", "Value"]
         self.elf_program_header_group = table.TableGroup(
             "Program Headers", fit_columns=True, headers=program_hdr_cols
         )
+        self.elf_file_header_group.view.setModel(
+            table.TableModel(
+                [
+                    ("TODO", "TODO"),
+                    ("TODO", "TODO"),
+                    ("TODO", "TODO"),
+                ],
+                headers=program_hdr_cols,
+            )
+        )
         layout.addWidget(self.elf_program_header_group)
 
-        # Optional Header
+        # Section Headers
         elf_section_hdr_cols = ["Name", "Value"]
         self.elf_section_header_group = table.TableGroup(
             "Section Headers", fit_columns=True, headers=elf_section_hdr_cols
         )
+        self.elf_file_header_group.view.setModel(
+            table.TableModel(
+                [
+                    ("TODO", "TODO"),
+                    ("TODO", "TODO"),
+                    ("TODO", "TODO"),
+                ],
+                headers=elf_section_hdr_cols,
+            )
+        )
         layout.addWidget(self.elf_section_header_group)
-
-        # TODO: Fill out header tables

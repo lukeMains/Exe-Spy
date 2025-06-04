@@ -2,7 +2,6 @@ import logging
 import os
 import time
 
-from elftools.elf import elffile
 from .readelf import ReadElf
 
 from . import utils
