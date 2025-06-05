@@ -36,7 +36,6 @@ class SectionsView(QtWidgets.QWidget):
         self.layout().addWidget(self.sections_table)
 
     def load(self, pe_obj: pe_file.PEFile):
-
         # Sections
         sections_list = []
         for i, section in enumerate(pe_obj.pe.sections):
