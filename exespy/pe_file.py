@@ -23,7 +23,7 @@ class Resource:
 class PEFile:
     """Base class for representing a PE file"""
 
-    def __init__(self, path: str):
+    def __init__(self, path: str, description: str):
         """
         Initialize the PEFile object
         :param path: Path to the PE file
@@ -35,6 +35,7 @@ class PEFile:
 
         self.path = path
         self.name = os.path.basename(path)
+        self.description = description
         self.stat = os.stat(path)
 
         # Read the PE into memory so it can be reused

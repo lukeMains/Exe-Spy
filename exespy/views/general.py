@@ -1,6 +1,5 @@
 import time
 import logging
-from typing import Union
 
 import PySide6.QtCore as QtCore
 import PySide6.QtWidgets as QtWidgets
@@ -52,10 +51,20 @@ class GeneralView(QtWidgets.QScrollArea):
         # Name
         self.file_name = QtWidgets.QLabel()
         font = self.file_name.font()
-        font.setPointSize(font.pointSize() + 2)
+        font.setPointSize(font.pointSize() + 7)
+        font.setBold(True)
+        font.setUnderline(True)
         self.file_name.setFont(font)
         self.file_name.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        # Desc
+        self.file_desc = QtWidgets.QLabel()
+        font = self.file_desc.font()
+        font.setPointSize(font.pointSize() + 4)
+        self.file_desc.setFont(font)
+        self.file_name.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+
         self.file_group.layout().addWidget(self.file_name)
+        self.file_group.layout().addWidget(self.file_desc)
 
         self.icon = QtWidgets.QLabel()
         self.file_group.layout().addWidget(self.icon)
@@ -68,7 +77,7 @@ class GeneralView(QtWidgets.QScrollArea):
         self.image_group = table.TableGroup("Image Information")
         self.scroll_area.layout().addWidget(self.image_group)
 
-    def load(self, exe: Union[pe_file.PEFile, elf_file.ELFFile]):
+    def load(self, exe: pe_file.PEFile | elf_file.ELFFile):
         self.exe = exe
 
         self.thread = QtCore.QThread()
@@ -82,6 +91,7 @@ class GeneralView(QtWidgets.QScrollArea):
         self.thread.finished.connect(self.show_checksum_result)  # type: ignore
 
         self.file_name.setText(exe.name)
+        self.file_desc.setText(exe.description)
 
         if isinstance(exe, pe_file.PEFile):
             try:

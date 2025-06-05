@@ -156,24 +156,6 @@ class ExeSpy(QtWidgets.QMainWindow):
             path = file_selection[0]
 
             logging.getLogger(name="exespy").debug(f"Opening file: {path}")
-            with open(path, "rb") as f:
-                if matches := MagicMatcher.DEFAULT_INSTANCE.match(f.read()):
-                    for match in matches:
-                        logging.getLogger(name="exespy").debug(
-                            f"Matches file type: {match.message()}"
-                        )
-                        file_type_description = match.message()
-                        if "PE32+" in file_type_description:
-                            self.load_pe(path)
-                            break
-                        elif "ELF" in file_type_description:
-                            self.load_elf(path)
-                            break
-                        else:
-                            helpers.show_message_box(
-                                f"File type not supported:\n{file_type_description}",
-                                alert_type=helpers.MessageBoxTypes.CRITICAL,
-                            )
 
         self.statusBar().clearMessage()
 
@@ -203,7 +185,28 @@ class ExeSpy(QtWidgets.QMainWindow):
         self.settings.setValue("view/geometry", self.saveGeometry())
         event.accept()
 
-    def load_pe(self, path: str):
+    def load_file(self, path):
+        with open(path, "rb") as f:
+            matches = MagicMatcher.DEFAULT_INSTANCE.match(f.read())
+
+        for match in matches:
+            logging.getLogger(name="exespy").debug(
+                f"Matches file type: {match.message()}"
+            )
+            file_type_description = match.message()
+            if "PE32+" in file_type_description:
+                self.load_pe(path, file_type_description)
+                break
+            elif "ELF" in file_type_description:
+                self.load_elf(path, file_type_description)
+                break
+            else:
+                helpers.show_message_box(
+                    f"File type not supported:\n{file_type_description}",
+                    alert_type=helpers.MessageBoxTypes.CRITICAL,
+                )
+
+    def load_pe(self, path: str, description: str):
         """Load a PE file and begin parsing"""
         try:
             self.tab_container_layout.removeWidget(state.tabview)  # type: ignore
@@ -213,7 +216,7 @@ class ExeSpy(QtWidgets.QMainWindow):
             self.progress_bar.setValue(0)
             self.statusBar().showMessage("Loading...")
             QtCore.QCoreApplication.processEvents()
-            self.exe = pe_file.PEFile(path)
+            self.exe = pe_file.PEFile(path, description)
         except pefile.PEFormatError:
             helpers.show_message_box(
                 "Not a valid PE file", alert_type=helpers.MessageBoxTypes.CRITICAL
@@ -228,7 +231,7 @@ class ExeSpy(QtWidgets.QMainWindow):
             self.statusBar().clearMessage()
             self.progress_bar.hide()
 
-    def load_elf(self, path: str):
+    def load_elf(self, path: str, description: str):
         """Load an ELF file and begin parsing"""
         try:
             self.tab_container_layout.removeWidget(state.tabview)  # type: ignore
@@ -238,7 +241,7 @@ class ExeSpy(QtWidgets.QMainWindow):
             self.progress_bar.setValue(0)
             self.statusBar().showMessage("Loading...")
             QtCore.QCoreApplication.processEvents()
-            self.exe = elf_file.ELFFile(path)
+            self.exe = elf_file.ELFFile(path, description)
         except elftools.common.exceptions.ELFError:
             helpers.show_message_box(
                 "Not a valid ELF file", alert_type=helpers.MessageBoxTypes.CRITICAL
@@ -267,7 +270,7 @@ def main():
 
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="A GUI tool for analyzing PE files")
-    parser.add_argument("file", help="Open the specified PE file", type=str, nargs="?")
+    parser.add_argument("file", help="Open the specified file", type=str, nargs="?")
     parser.add_argument(
         "-v",
         "--version",
@@ -307,18 +310,7 @@ def main():
 
     # Process command-line file
     if args.file is not None:
-        with open(args.file, "rb") as f:
-            if matches := MagicMatcher.DEFAULT_INSTANCE.match(f.read()):
-                for match in matches:
-                    file_type_description = match.message()
-                    if "PE32+" in file_type_description:
-                        exe_spy.load_pe(args.file)
-                        break
-                    elif "ELF" in file_type_description:
-                        exe_spy.load_elf(args.file)
-                        break
-                    else:
-                        pass
+        exe_spy.load_file(args.file)
 
     # Run the app
     sys.exit(app.exec())
