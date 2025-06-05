@@ -1,9 +1,9 @@
 # Store singleton-like application state
 
 # Prevent circular imports
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from . import tab_view
 
-tabview: tab_view.TabView | None = None
+tabview: Optional["tab_view.TabView"] = None
