@@ -1,4 +1,3 @@
-from typing import Union
 import PySide6.QtWidgets as QtWidgets
 import logging
 
@@ -46,7 +45,7 @@ class HeadersView(QtWidgets.QScrollArea):
         self.setWidget(self.scroll_area)
         self.scroll_area.setLayout(QtWidgets.QFormLayout())
 
-    def load(self, exe: Union[pe_file.PEFile, elf_file.ELFFile]):
+    def load(self, exe: pe_file.PEFile | elf_file.ELFFile):
         logging.getLogger("exespy").debug(f"Loading headers for {exe.__class__}")
         if isinstance(exe, pe_file.PEFile):
             logging.getLogger("exespy").debug("Loading PE file!")
@@ -370,7 +369,7 @@ class HeadersView(QtWidgets.QScrollArea):
         self.elf_program_header_group = table.TableGroup(
             "Program Headers", fit_columns=True, headers=program_hdr_cols
         )
-        self.elf_file_header_group.view.setModel(
+        self.elf_program_header_group.view.setModel(
             table.TableModel(
                 [
                     ("TODO", "TODO"),
@@ -387,7 +386,7 @@ class HeadersView(QtWidgets.QScrollArea):
         self.elf_section_header_group = table.TableGroup(
             "Section Headers", fit_columns=True, headers=elf_section_hdr_cols
         )
-        self.elf_file_header_group.view.setModel(
+        self.elf_section_header_group.view.setModel(
             table.TableModel(
                 [
                     ("TODO", "TODO"),
