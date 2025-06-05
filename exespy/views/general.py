@@ -18,13 +18,13 @@ class ChecksumWorker(QtCore.QObject):
 
     finished = QtCore.Signal()
 
-    def __init__(self, pe: pe_file.PEFile):
+    def __init__(self, exe: pe_file.PEFile | elf_file.ELFFile):
         super().__init__()
-        self.pe = pe
+        self.exe = exe
 
     def run(self):
         start = time.time()
-        self.pe.calculate_checksum()
+        self.exe.calculate_checksum()
         logging.getLogger("exespy").debug(
             f" (ASYNC) took {time.time() - start:.4f} seconds"
         )
@@ -73,13 +73,13 @@ class GeneralView(QtWidgets.QScrollArea):
 
         self.thread = QtCore.QThread()
         self.worker = ChecksumWorker(exe)
-        self.worker.moveToThread(self.thread)
-        self.thread.started.connect(self.worker.run)
-        self.worker.finished.connect(self.thread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
-        self.thread.start()
-        self.thread.finished.connect(self.show_checksum_result)
+        self.worker.moveToThread(self.thread)  # type: ignore
+        self.thread.started.connect(self.worker.run)  # type: ignore
+        self.worker.finished.connect(self.thread.quit)  # type: ignore
+        self.worker.finished.connect(self.worker.deleteLater)  # type: ignore
+        self.thread.finished.connect(self.thread.deleteLater)  # type: ignore
+        self.thread.start()  # type: ignore
+        self.thread.finished.connect(self.show_checksum_result)  # type: ignore
 
         self.file_name.setText(exe.name)
 

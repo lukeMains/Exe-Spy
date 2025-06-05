@@ -101,7 +101,7 @@ class PEFile:
     # TODO: determine what this function should actually return
     def timestamp(self) -> int:
         """Return the timestamp in the PE header"""
-        self.pe.FILE_HEADER.TimeDateStamp
+        return self.pe.FILE_HEADER.TimeDateStamp if self.pe.FILE_HEADER else 0
 
     def entrypoint(self) -> int:
         """Return the entrypoint of the PE file"""

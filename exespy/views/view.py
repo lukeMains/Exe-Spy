@@ -1,6 +1,6 @@
 import PySide6.QtWidgets as QtWidgets
 
-from .. import pe_file
+from .. import pe_file, elf_file
 
 
 class View(QtWidgets.QWidget):
@@ -9,5 +9,4 @@ class View(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def load(self, pe_obj: pe_file.PEFile):
-        ...
+    def load(self, pe_obj: pe_file.PEFile | elf_file.ELFFile): ...

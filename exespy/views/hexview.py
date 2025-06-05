@@ -25,22 +25,22 @@ class HexView(QtWidgets.QWidget):
         self.address_panel = textedit.MonoTextEdit()
         self.hex_panel = textedit.MonoTextEdit()
         self.text_panel = textedit.MonoTextEdit()
-        self.layout().addWidget(self.address_panel, 1, 0, 1, 1)
-        self.layout().addWidget(self.hex_panel, 1, 1, 1, 1)
-        self.layout().addWidget(self.text_panel, 1, 2, 1, 1)
+        self.layout().addWidget(self.address_panel, 1, 0, 1, 1)  # type: ignore
+        self.layout().addWidget(self.hex_panel, 1, 1, 1, 1)  # type: ignore
+        self.layout().addWidget(self.text_panel, 1, 2, 1, 1)  # type: ignore
 
         address_label = QtWidgets.QLabel("Offset")
         address_label.setFont(self.address_panel.font())
-        self.layout().addWidget(address_label, 0, 0, 1, 1)
+        self.layout().addWidget(address_label, 0, 0, 1, 1)  # type: ignore
 
         hex_label = QtWidgets.QLabel("00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F")
         hex_label.setFont(self.hex_panel.font())
         hex_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.layout().addWidget(hex_label, 0, 1, 1, 1)
+        self.layout().addWidget(hex_label, 0, 1, 1, 1)  # type: ignore
 
         text_label = QtWidgets.QLabel("Decoded Text")
         text_label.setFont(self.text_panel.font())
-        self.layout().addWidget(text_label, 0, 2, 1, 1)
+        self.layout().addWidget(text_label, 0, 2, 1, 1)  # type: ignore
 
         self.hex_panel.selectionChanged.connect(self.hex_selection_changed)
         self.text_panel.selectionChanged.connect(self.text_selection_changed)

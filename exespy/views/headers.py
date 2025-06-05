@@ -12,23 +12,23 @@ from elftools.elf.descriptions import (
     describe_e_type,
     describe_e_machine,
     describe_e_version_numeric,
-    describe_p_type,
-    describe_p_flags,
-    describe_rh_flags,
-    describe_sh_type,
-    describe_sh_flags,
-    describe_symbol_type,
-    describe_symbol_bind,
-    describe_symbol_shndx,
-    describe_reloc_type,
-    describe_dyn_tag,
-    describe_dt_flags,
-    describe_dt_flags_1,
-    describe_ver_flags,
-    describe_note,
-    describe_attr_tag_arm,
-    describe_attr_tag_riscv,
-    describe_symbol_other,
+    # describe_p_type,
+    # describe_p_flags,
+    # describe_rh_flags,
+    # describe_sh_type,
+    # describe_sh_flags,
+    # describe_symbol_type,
+    # describe_symbol_bind,
+    # describe_symbol_shndx,
+    # describe_reloc_type,
+    # describe_dyn_tag,
+    # describe_dt_flags,
+    # describe_dt_flags_1,
+    # describe_ver_flags,
+    # describe_note,
+    # describe_attr_tag_arm,
+    # describe_attr_tag_riscv,
+    # describe_symbol_other,
 )
 from elftools.elf.constants import SHN_INDICES
 from .components import table
@@ -54,10 +54,6 @@ class HeadersView(QtWidgets.QScrollArea):
         elif isinstance(exe, elf_file.ELFFile):
             logging.getLogger("exespy").debug("Loading ELF file!")
             self.load_elf(exe)
-        else:
-            # Should be unreachable
-            # TODO: Add logging or popup?
-            pass
 
     def load_pe(self, pe_obj: pe_file.PEFile):
         # Setup Tables

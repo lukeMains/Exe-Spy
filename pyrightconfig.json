@@ -2,5 +2,6 @@
   "typeCheckingMode": "standard",
   "reportOptionalSubscript": false,
   "reportOptionalMemberAccess": false,
-  "reportAttributeAccessIssue": false
+  "reportAttributeAccessIssue": false,
+  "reportIncompatibleMethodOverride": false
 }

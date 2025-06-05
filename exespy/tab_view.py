@@ -165,7 +165,7 @@ class TabView(QtWidgets.QTabWidget):
 
     def add_tab(self, view: QtWidgets.QWidget):
         """Add a tab to the view"""
-        self.tabs[view.NAME] = view
+        self.tabs[view.NAME] = view  # type: ignore
         self.addTab(self.tabs[view.NAME], view.NAME)
 
     def set_loading(self, tab: str, loading: bool):
@@ -193,7 +193,7 @@ class TabView(QtWidgets.QTabWidget):
     def on_tab_change(self, index: int):
         """Called when a tab is changed"""
         tab = self.tabs[self.tabText(index)]
-        if hasattr(tab, "load_finalize") and tab.loaded == False:
+        if hasattr(tab, "load_finalize") and not tab.loaded:
             if tab.SHOW_PROGRESS:
                 progress = helpers.progress_dialog(
                     f"Loading {tab.NAME}...", "Loading", self
@@ -202,5 +202,5 @@ class TabView(QtWidgets.QTabWidget):
             tab.load_finalize()
 
             if tab.SHOW_PROGRESS:
-                progress.close()
+                progress.close()  # type: ignore
                 tab.loaded = True

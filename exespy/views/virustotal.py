@@ -56,7 +56,6 @@ class VirusTotalView(QtWidgets.QScrollArea):
         self.pe_obj = pe_obj
 
     def get_vt(self):
-
         apikey = QtCore.QSettings().value("virustotal/api_key", "")
 
         if apikey == "":
@@ -67,7 +66,7 @@ class VirusTotalView(QtWidgets.QScrollArea):
             )
             return
 
-        self.client = vt.Client(apikey)
+        self.client = vt.Client(str(apikey))
 
         self.vt_results = None
 

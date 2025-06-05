@@ -68,7 +68,7 @@ class DisassemblyView(QtWidgets.QWidget):
         self.text_edit = textedit.MonoTextEdit()
         self.layout().addWidget(self.text_edit)
 
-    def load_async(self, pe_obj: pe_file.PEFile):
+    def load_async(self, pe_obj: pe_file.PEFile | None):
         self.pe_obj = pe_obj
 
         if pe_obj is None:
@@ -90,7 +90,7 @@ class DisassemblyView(QtWidgets.QWidget):
             syntax = iced_x86.FormatterSyntax.INTEL
 
         self.assembly, self.addresses = self.get_disassembly(
-            pe_obj.pe.get_memory_mapped_image(),
+            pe_obj.pe.get_memory_mapped_image(),  # type: ignore
             image_base=pe_obj.pe.OPTIONAL_HEADER.ImageBase,
             is_64bit=pe_obj.is_64bit(),
             syntax=syntax,
@@ -137,9 +137,9 @@ class DisassemblyView(QtWidgets.QWidget):
             bytes_str = code[start_index : start_index + instr.len].hex().upper()
 
             if is_64bit:
-                assembly.append(f"{instr.ip+image_base:016X} {bytes_str:20} {disasm}")
+                assembly.append(f"{instr.ip + image_base:016X} {bytes_str:20} {disasm}")
             else:
-                assembly.append(f"{instr.ip+image_base:08X} {bytes_str:20} {disasm}")
+                assembly.append(f"{instr.ip + image_base:08X} {bytes_str:20} {disasm}")
 
             addresses.append(instr.ip + image_base)
 

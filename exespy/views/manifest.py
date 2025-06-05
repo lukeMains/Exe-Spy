@@ -1,7 +1,4 @@
 import PySide6.QtWidgets as QtWidgets
-import PySide6.QtGui as QtGui
-import PySide6.QtCore as QtCore
-import magic
 
 from .. import pe_file
 from .components import textedit

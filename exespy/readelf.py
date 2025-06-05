@@ -863,7 +863,7 @@ class ReadElf:
         if not self.elffile.has_ehabi_info():
             self._emitline("There are no .ARM.idx sections in this file.")
             return
-        for ehabi_info in self.elffile.get_ehabi_infos():
+        for ehabi_info in self.elffile.get_ehabi_infos():  # type: ignore
             # Unwind section '.ARM.exidx' at offset 0x203e8 contains 1009 entries:
             self._emitline(
                 "\nUnwind section '%s' at offset 0x%x contains %d %s"
@@ -1239,21 +1239,21 @@ class ReadElf:
 
         for section in self.elffile.iter_sections():
             if isinstance(section, GNUVerSymSection):
-                self._versioninfo["versym"] = section
+                self._versioninfo["versym"] = section  # type: ignore
             elif isinstance(section, GNUVerDefSection):
-                self._versioninfo["verdef"] = section
+                self._versioninfo["verdef"] = section  # type: ignore
             elif isinstance(section, GNUVerNeedSection):
-                self._versioninfo["verneed"] = section
+                self._versioninfo["verneed"] = section  # type: ignore
             elif isinstance(section, DynamicSection):
                 for tag in section.iter_tags():
                     if tag["d_tag"] == "DT_VERSYM":
-                        self._versioninfo["type"] = "GNU"
+                        self._versioninfo["type"] = "GNU"  # type: ignore
                         break
 
         if not self._versioninfo["type"] and (
             self._versioninfo["verneed"] or self._versioninfo["verdef"]
         ):
-            self._versioninfo["type"] = "Solaris"
+            self._versioninfo["type"] = "Solaris"  # type: ignore
 
     def _symbol_version(self, nsym):
         """Return a dict containing information on the
@@ -1271,7 +1271,7 @@ class ReadElf:
 
         symbol = self._versioninfo["versym"].get_symbol(nsym)
         index = symbol.entry["ndx"]
-        if not index in ("VER_NDX_LOCAL", "VER_NDX_GLOBAL"):
+        if index not in ("VER_NDX_LOCAL", "VER_NDX_GLOBAL"):
             index = int(index)
 
             if self._versioninfo["type"] == "GNU":
@@ -1393,11 +1393,9 @@ class ReadElf:
                         self._emitline("   Signature:     0x%x" % cu["type_signature"])
                         self._emitline("   Type Offset:   0x%x" % cu["type_offset"])
             else:
-                (
-                    self._emitline(
-                        "   Abbrev Offset: %s"
-                        % (self._format_hex(cu["debug_abbrev_offset"], alternate=True))
-                    ),
+                self._emitline(
+                    "   Abbrev Offset: %s"
+                    % (self._format_hex(cu["debug_abbrev_offset"], alternate=True))
                 )
                 self._emitline("   Pointer Size:  %s" % cu["address_size"])
 
@@ -1436,7 +1434,7 @@ class ReadElf:
                     if (
                         "DW_OP_fbreg" in attr_desc
                         and current_function
-                        and not "DW_AT_frame_base" in current_function.attributes
+                        and "DW_AT_frame_base" not in current_function.attributes
                     ):
                         postfix = " [without dw_at_frame_base]"
                     else:
@@ -1772,7 +1770,7 @@ class ReadElf:
     def _dump_debug_aranges(self):
         """Dump the aranges table"""
         aranges_table = self._dwarfinfo.get_aranges()
-        if aranges_table == None:
+        if aranges_table is None:
             return
         # Seems redundant, but we need to get the unsorted set of entries
         # to match system readelf.

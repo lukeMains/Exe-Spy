@@ -30,6 +30,6 @@ class LicenseDialog(QtWidgets.QDialog):
         self.buttonBox.accepted.connect(self.accept)
 
         self.layout = QtWidgets.QVBoxLayout()
-        self.layout.addWidget(text)
-        self.layout.addWidget(self.buttonBox)
-        self.setLayout(self.layout)
+        self.layout.addWidget(text)  # type: ignore
+        self.layout.addWidget(self.buttonBox)  # type: ignore
+        self.setLayout(self.layout)  # type: ignore

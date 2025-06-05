@@ -4,7 +4,6 @@ import io
 
 import PySide6.QtWidgets as QtWidgets
 
-from .. import helpers
 from .. import pe_file
 from .. import state
 from .components import table

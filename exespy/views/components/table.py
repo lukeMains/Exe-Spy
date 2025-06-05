@@ -13,7 +13,7 @@ class TableGroup(QtWidgets.QGroupBox):
         headers=None,
         fit_to_contents=True,
         expand_last_column=False,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(title, *args, **kwargs)
 
@@ -35,16 +35,13 @@ class TableModel(QtCore.QAbstractTableModel):
 
     def __init__(self, data, *args, headers=None, hex_columns=[], **kwargs) -> None:
         super(TableModel, self).__init__(*args, **kwargs)
-        self._data = data
+        self._data = list(data)  # Need to ensure that data is subscriptable!
 
         self.headers = headers
         self.hex_columns = hex_columns
 
         if self.headers is None:
             self.headers = []
-
-    def set_data(self, data):
-        self._data = data
 
     def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
         if role == QtCore.Qt.DisplayRole and orientation == QtCore.Qt.Horizontal:
@@ -71,7 +68,7 @@ class TableModel(QtCore.QAbstractTableModel):
         # The following takes the first sub-list, and returns
         # the length (only works if all rows are an equal length)
         if len(self._data) > 0:
-            return len(self._data[0])
+            return len(next(iter(self._data)))
         return 0
 
 
@@ -86,7 +83,7 @@ class TableView(QtWidgets.QTableView):
         fit_to_contents=True,
         first_column_scale=3,
         expand_last_column=False,
-        **kwargs
+        **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
 
@@ -125,14 +122,14 @@ class TableView(QtWidgets.QTableView):
             #     )
             self.resizeColumnsToContents()
         else:
-            self.setColumnWidth(0, self.width() / self.first_column_scale)
+            self.setColumnWidth(0, int(self.width() / self.first_column_scale))
 
         self.resizeRowsToContents()
 
         if self.fit_to_contents and self.model():
             table_height = 0
-            if self.model().rowCount(None) != 0:
-                for i in range(self.model().rowCount(None)):
+            if self.model().rowCount(None) != 0:  # type: ignore
+                for i in range(self.model().rowCount(None)):  # type: ignore
                     table_height += self.rowHeight(i)
 
             table_height += self.horizontalHeader().height()

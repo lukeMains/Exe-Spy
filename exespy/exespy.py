@@ -52,7 +52,7 @@ class ExeSpy(QtWidgets.QMainWindow):
         self.setWindowTitle(helpers.APP_NAME)
 
         # Restore window geometry from settings
-        self.restoreGeometry(self.settings.value("view/geometry", QtCore.QByteArray()))
+        self.restoreGeometry(self.settings.value("view/geometry", QtCore.QByteArray()))  # type: ignore
 
         self.progress_bar = QtWidgets.QProgressBar(self.statusBar())
         self.progress_bar.setMaximumWidth(100)
@@ -206,7 +206,7 @@ class ExeSpy(QtWidgets.QMainWindow):
     def load_pe(self, path: str):
         """Load a PE file and begin parsing"""
         try:
-            self.tab_container_layout.removeWidget(state.tabview)
+            self.tab_container_layout.removeWidget(state.tabview)  # type: ignore
             state.tabview = tab_view.TabView(self)
             self.tab_container_layout.addWidget(state.tabview)
             self.progress_bar.show()
@@ -231,7 +231,7 @@ class ExeSpy(QtWidgets.QMainWindow):
     def load_elf(self, path: str):
         """Load an ELF file and begin parsing"""
         try:
-            self.tab_container_layout.removeWidget(state.tabview)
+            self.tab_container_layout.removeWidget(state.tabview)  # type: ignore
             state.tabview = tab_view.TabView(self)
             self.tab_container_layout.addWidget(state.tabview)
             self.progress_bar.show()

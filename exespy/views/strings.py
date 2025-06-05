@@ -54,7 +54,7 @@ class StringsView(QtWidgets.QWidget):
             fit_columns=False,
             fit_to_contents=False,
             headers=["String", "Offset"],
-            first_column_scale=1.2,
+            first_column_scale=int(1.2),
         )
         self.table_view.setSortingEnabled(True)
 
