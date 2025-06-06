@@ -3,7 +3,7 @@ import PySide6.QtGui as QtGui
 import PySide6.QtCore as QtCore
 import magic
 
-from .. import pe_file
+from .. import pe_file, elf_file
 from .components import table
 
 
@@ -39,7 +39,14 @@ class ResourcesView(QtWidgets.QWidget):
 
         self.layout().addWidget(self.resources_table)
 
-    def load(self, pe_obj: pe_file.PEFile):
+    def load(self, exe: pe_file.PEFile | elf_file.ELFFile):
+        if isinstance(exe, pe_file.PEFile):
+            self.load_pe(exe)
+        elif isinstance(exe, elf_file.ELFFile):
+            # TODO: I'm not sure this analog makes sense from PE to ELF files
+            pass
+
+    def load_pe(self, pe_obj: pe_file.PEFile):
         # Resources
         resources_list = []
 

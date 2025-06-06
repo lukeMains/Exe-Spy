@@ -124,60 +124,33 @@ class GeneralView(QtWidgets.QScrollArea):
         )
 
         # Image Information
-        self.model = [
-            (
-                "Size",
-                f"{self.sizeof_fmt(exe.stat.st_size)} ({exe.stat.st_size:,} bytes)",
-            ),
-            (
-                "Timestamp",
-                (
-                    helpers.format_time(exe.timestamp())
-                    if isinstance(exe, pe_file.PEFile)
-                    else "-"
-                ),
-            ),
-            ("Type", exe.type()),
-            ("Architecture", exe.architecture()),
-            (
-                "Subsystem",
-                exe.subsystem() if isinstance(exe, pe_file.PEFile) else "-",
-            ),
-            (
-                "Image Base",
-                (
-                    hex(exe.image_base())
-                    if isinstance(exe, pe_file.PEFile)
-                    else "0x80000000"
-                ),
-            ),
-            ("Entrypoint", hex(exe.entrypoint())),
-            (
-                "Signature",
-                exe.verify_signature() if isinstance(exe, pe_file.PEFile) else "-",
-            ),
-        ]
-        self.image_group.view.setModel(
-            table.TableModel(self.model + [("Checksum", "loading...")])
-        )
+        table_items = {
+            "Size": f"{self.sizeof_fmt(exe.stat.st_size)} ({exe.stat.st_size:,} bytes)",
+            "Type": exe.type(),
+            "Architecture": exe.architecture(),
+            "Image Base": hex(exe.image_base()),
+            "Entrypoint": hex(exe.entrypoint()),
+        }
+        if isinstance(exe, pe_file.PEFile):
+            table_items.update(
+                {
+                    "Timestamp": helpers.format_time(exe.timestamp()),
+                    "Subsystem": exe.subsystem(),
+                    "Signature": exe.verify_signature(),
+                    "Checksum": "loading...",
+                }
+            )
+        self.model = [(k, table_items[k]) for k in sorted(table_items.keys())]
+        self.image_group.view.setModel(table.TableModel(self.model))
 
     def show_checksum_result(self):
         """Add the checksum verification result to the table."""
-        self.image_group.view.setModel(
-            table.TableModel(
-                self.model
-                + [
-                    (
-                        "Checksum",
-                        (
-                            self.exe.verify_checksum()
-                            if isinstance(self.exe, pe_file.PEFile)
-                            else "-"
-                        ),
-                    )
-                ]
+        if isinstance(self.exe, pe_file.PEFile):
+            self.image_group.view.setModel(
+                table.TableModel(
+                    self.model + [("Checksum", (self.exe.verify_checksum()))]
+                )
             )
-        )
         QtCore.QCoreApplication.processEvents()
 
     def sizeof_fmt(self, num, suffix="B"):

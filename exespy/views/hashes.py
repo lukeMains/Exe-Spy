@@ -4,7 +4,7 @@ import io
 
 import PySide6.QtWidgets as QtWidgets
 
-from .. import pe_file
+from .. import pe_file, elf_file
 from .. import state
 from .components import table
 
@@ -19,7 +19,7 @@ class HashesView(QtWidgets.QScrollArea):
 
         self.loaded = False
 
-        self.pe_obj = None
+        self.exe = None
 
         # Set up scroll area
         self.setWidgetResizable(True)
@@ -47,9 +47,9 @@ class HashesView(QtWidgets.QScrollArea):
 
         self.file_hashes_group.setFocus()
 
-    def load_async(self, pe_obj: pe_file.PEFile):
-        self.pe_obj = pe_obj
-        self.hashes = self.calculate_hashes(pe_obj)
+    def load_async(self, exe: pe_file.PEFile | elf_file.ELFFile):
+        self.exe = exe
+        self.hashes = self.calculate_hashes(exe)
 
     def load_finalize(self):
         # File Hashes
@@ -58,27 +58,32 @@ class HashesView(QtWidgets.QScrollArea):
         )
 
         # Other Hashes
-        self.other_hashes_group.view.setModel(
-            table.TableModel(
-                [
-                    ("Imphash", self.pe_obj.pe.get_imphash()),
-                    ("Authentihash (MD5)", self.pe_obj.lief_obj.authentihash_md5.hex()),
-                    (
-                        "Authentihash (SHA1)",
-                        self.pe_obj.lief_obj.authentihash_sha1.hex(),
-                    ),
-                    (
-                        "Authentihash (SHA256)",
-                        self.pe_obj.lief_obj.authentihash_sha256.hex(),
-                    ),
-                    (
-                        "Authentihash (SHA512)",
-                        self.pe_obj.lief_obj.authentihash_sha512.hex(),
-                    ),
-                ],
-                headers=["Type", "Hash"],
+        if isinstance(self.exe, pe_file.PEFile):
+            pe_obj = self.exe
+            self.other_hashes_group.view.setModel(
+                table.TableModel(
+                    [
+                        ("Imphash", pe_obj.pe.get_imphash()),
+                        (
+                            "Authentihash (MD5)",
+                            pe_obj.lief_obj.authentihash_md5.hex(),
+                        ),
+                        (
+                            "Authentihash (SHA1)",
+                            pe_obj.lief_obj.authentihash_sha1.hex(),
+                        ),
+                        (
+                            "Authentihash (SHA256)",
+                            pe_obj.lief_obj.authentihash_sha256.hex(),
+                        ),
+                        (
+                            "Authentihash (SHA512)",
+                            pe_obj.lief_obj.authentihash_sha512.hex(),
+                        ),
+                    ],
+                    headers=["Type", "Hash"],
+                )
             )
-        )
 
     def enable_tab(self):
         state.tabview.set_loading(self.NAME, False)
@@ -87,7 +92,7 @@ class HashesView(QtWidgets.QScrollArea):
         self.load_async(pe_obj)
         self.load_finalize()
 
-    def calculate_hashes(self, pe_obj: pe_file.PEFile) -> "list[tuple]":
+    def calculate_hashes(self, exe: pe_file.PEFile | elf_file.ELFFile) -> "list[tuple]":
         """Calculate file hashes as a list of tuples."""
         hash_crc32 = crc32()
         hash_md5 = hashlib.md5()
@@ -104,7 +109,7 @@ class HashesView(QtWidgets.QScrollArea):
         hash_blake2b = hashlib.blake2b()
 
         # Calculate the hashes while only looping through the file once
-        with io.BytesIO(pe_obj.data) as f:
+        with io.BytesIO(exe.data) as f:
             # Read the file in chunks of 4096 bytes
             for byte_block in iter(lambda: f.read(4096), b""):
                 hash_crc32.update(byte_block)

@@ -2,7 +2,7 @@ import PySide6.QtWidgets as QtWidgets
 
 import yara
 
-from .. import pe_file
+from .. import pe_file, elf_file
 from .. import state
 from .. import helpers
 from .components import table
@@ -35,7 +35,7 @@ class PackersView(QtWidgets.QWidget):
 
         self.layout().addWidget(self.packers_table)
 
-    def load_async(self, pe_obj: pe_file.PEFile):
+    def load_async(self, exe: pe_file.PEFile | elf_file.ELFFile):
         # Packers
         self.matches_list = []
 
@@ -50,7 +50,7 @@ class PackersView(QtWidgets.QWidget):
         # rules.save("exespy/yara/compiled.yara.bin")
         # rules = yara.load(helpers.resource_path("yara/compiled.yara.bin"))
 
-        matches = rules.match(data=pe_obj.data)
+        matches = rules.match(data=exe.data)
 
         for match in matches:
             if "description" in match.meta:

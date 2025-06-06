@@ -165,6 +165,7 @@ class TabView(QtWidgets.QTabWidget):
 
     def add_tab(self, view: QtWidgets.QWidget):
         """Add a tab to the view"""
+        logging.getLogger("exespy").debug(f"Adding tab: '{view.NAME}'")
         self.tabs[view.NAME] = view  # type: ignore
         self.addTab(self.tabs[view.NAME], view.NAME)
 

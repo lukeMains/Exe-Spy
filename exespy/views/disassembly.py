@@ -1,11 +1,10 @@
 import PySide6.QtWidgets as QtWidgets
 import PySide6.QtGui as QtGui
-import PySide6.QtCore as QtCore
 
 import iced_x86
 
 from .. import state
-from .. import pe_file
+from .. import pe_file, elf_file
 from .. import helpers
 from .components import textedit
 
@@ -21,7 +20,7 @@ class DisassemblyView(QtWidgets.QWidget):
         self.loaded = False
         self.assembly_text = ""
 
-        self.pe_obj: pe_file.PEFile = None
+        self.exe: pe_file.PEFile = None
         self.assembly: "list[str]" = None
         self.addresses: "list[int]" = None
 
@@ -68,13 +67,10 @@ class DisassemblyView(QtWidgets.QWidget):
         self.text_edit = textedit.MonoTextEdit()
         self.layout().addWidget(self.text_edit)
 
-    def load_async(self, pe_obj: pe_file.PEFile | None):
-        self.pe_obj = pe_obj
+    def load_async(self, exe: pe_file.PEFile | elf_file.ELFFile):
+        self.exe = exe
 
-        if pe_obj is None:
-            return
-
-        if not pe_obj.is_x86():
+        if not exe.is_x86():
             self.assembly_text = "This file is not an x86 executable."
             return
 
@@ -90,9 +86,11 @@ class DisassemblyView(QtWidgets.QWidget):
             syntax = iced_x86.FormatterSyntax.INTEL
 
         self.assembly, self.addresses = self.get_disassembly(
-            pe_obj.pe.get_memory_mapped_image(),  # type: ignore
-            image_base=pe_obj.pe.OPTIONAL_HEADER.ImageBase,
-            is_64bit=pe_obj.is_64bit(),
+            bytes(exe.pe.get_memory_mapped_image())
+            if isinstance(exe, pe_file.PEFile)
+            else exe.data,
+            image_base=exe.image_base(),
+            is_64bit=exe.is_64bit(),
             syntax=syntax,
         )
 
@@ -148,14 +146,14 @@ class DisassemblyView(QtWidgets.QWidget):
     def handle_formatter_changed(self):
         """Reload the tab to re-parse the disassembly with the new formatter syntax"""
         self.text_edit.setPlainText("")
-        self.load(self.pe_obj)
+        self.load(self.exe)
 
     def handle_entrypoint_btn_clicked(self):
         """Jump to the entrypoint of the loaded PE file."""
         if self.addresses is None or len(self.addresses) == 0:
             return
 
-        self.scroll_to_address(self.pe_obj.entrypoint())
+        self.scroll_to_address(self.exe.entrypoint())
 
     def handle_address_box_search(self):
         """Jump to the address in the address box."""
@@ -197,7 +195,7 @@ class DisassemblyView(QtWidgets.QWidget):
                 closest_line = i
 
             # Calculate distance with image base
-            distance_base = abs(address - (target_address + self.pe_obj.image_base()))
+            distance_base = abs(address - (target_address + self.exe.image_base()))
             if distance_base <= closest_distance_base:
                 closest_distance_base = distance_base
                 closest_line_base = i

@@ -3,7 +3,7 @@ import PySide6.QtGui as QtGui
 import PySide6.QtCore as QtCore
 
 from .. import helpers
-from .. import pe_file
+from .. import pe_file, elf_file
 from .. import state
 from .components import table
 
@@ -60,10 +60,11 @@ class StringsView(QtWidgets.QWidget):
 
         self.layout().addWidget(self.table_view)
 
-    def load_async(self, pe_obj: pe_file.PEFile):
-        self.pe = pe_obj
+    def load_async(self, exe: pe_file.PEFile | elf_file.ELFFile):
+        # TODO: debug strings for elf file
+        self.exe = exe
         self.table_model = table.TableModel(
-            pe_obj.strings(min_length=self.search_minimum.value()),
+            exe.strings(min_length=self.search_minimum.value()),
             headers=["String", "Offset"],
             hex_columns=[1],
         )
@@ -82,8 +83,8 @@ class StringsView(QtWidgets.QWidget):
     def enable_tab(self):
         state.tabview.set_loading(self.NAME, False)
 
-    def load(self, pe_obj: pe_file.PEFile):
-        self.load_async(pe_obj)
+    def load(self, exe: pe_file.PEFile | elf_file.ELFFile):
+        self.load_async(exe)
         self.load_finalize()
 
     def handle_search_change(self):
@@ -109,6 +110,6 @@ class StringsView(QtWidgets.QWidget):
 
     def handle_minimum_change(self):
         progress = helpers.progress_dialog(f"Loading {self.NAME}...", "Loading", self)
-        self.load(self.pe)
+        self.load(self.exe)
         self.handle_search_change()
         progress.close()

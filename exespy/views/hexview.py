@@ -4,7 +4,7 @@ import PySide6.QtWidgets as QtWidgets
 import PySide6.QtCore as QtCore
 import PySide6.QtGui as QtGui
 
-from .. import pe_file
+from .. import pe_file, elf_file
 from .. import state
 
 from .components import textedit
@@ -100,23 +100,23 @@ class HexView(QtWidgets.QWidget):
         self.hex_panel.setPalette(palette_match_active_highlight)
         self.text_panel.setPalette(palette_match_active_highlight)
 
-    def load_async(self, pe_obj: pe_file.PEFile):
-        self.pe_obj = pe_obj
+    def load_async(self, exe: pe_file.PEFile | elf_file.ELFFile):
+        self.exe = exe
 
-        if pe_obj is None:
+        if exe is None:
             return
 
         BYTES_PER_LINE = 16
 
         # Set the length of the address in the address panel
         # Minumum length is 4 bytes, but will increase for larger files
-        NUM_ADDRESS_CHARS = max(8, len("{:X}".format(pe_obj.stat.st_size)))
+        NUM_ADDRESS_CHARS = max(8, len("{:X}".format(exe.stat.st_size)))
 
         self.address_values = []
         self.hex_values = []
         self.text_values = []
 
-        with io.BytesIO(pe_obj.data) as f:
+        with io.BytesIO(exe.data) as f:
             data = f.read(BYTES_PER_LINE)
             while data:
                 self.address_values.append(

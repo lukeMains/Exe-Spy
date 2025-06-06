@@ -1,6 +1,6 @@
 import PySide6.QtWidgets as QtWidgets
 
-from .. import pe_file
+from .. import pe_file, elf_file
 from .components import table
 
 
@@ -20,7 +20,13 @@ class ImportsView(QtWidgets.QWidget):
         )
         self.layout().addWidget(self.imports_table)
 
-    def load(self, pe_obj: pe_file.PEFile):
+    def load(self, exe: pe_file.PEFile | elf_file.ELFFile):
+        if isinstance(exe, pe_file.PEFile):
+            self.load_pe(exe)
+        elif isinstance(exe, elf_file.ELFFile):
+            self.load_elf(exe)
+
+    def load_pe(self, pe_obj: pe_file.PEFile):
         # Imports
         imports_list = []
 
@@ -45,3 +51,7 @@ class ImportsView(QtWidgets.QWidget):
         self.imports_table.setModel(
             table.TableModel(imports_list, headers=["Name", "Library", "Address"])
         )
+
+    def load_elf(self, elf_obj: elf_file.ELFFile):
+        # TODO: readelf -d | grep NEEDED
+        pass

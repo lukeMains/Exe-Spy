@@ -1,8 +1,10 @@
 import logging
 import os
+import io
 import time
 
 from .readelf import ReadElf
+from elftools.elf.descriptions import describe_p_type
 
 from . import utils
 
@@ -26,9 +28,14 @@ class ELFFile:
         self.description = description
         self.stat = os.stat(path)
 
+        # FIXME: We open and read the file so many times! This is unecessary..
+        with open(path, "rb") as f:
+            self.data = f.read()
+
         # Read the ELF file into memory so it can be reused
-        self.readelf = ReadElf(open(path, "rb"), None)
+        self.readelf = ReadElf(io.BytesIO(self.data), None)
         self.elf = self.readelf.elffile
+        self.elf_image_base = None
 
         self.__calculated_checksum = None
 
@@ -60,7 +67,7 @@ class ELFFile:
 
     def is_x86(self) -> bool:
         """TODO"""
-        return self.architecture() == "x86" or self.architecture() == "x86_64"
+        return self.architecture() == "x86" or self.architecture() == "x64"
 
     def is_32bit(self) -> bool:
         """TODO"""
@@ -80,12 +87,25 @@ class ELFFile:
     def entrypoint(self) -> int:
         """Returns the entrypoint of the ELF file"""
         if addr := self.elf.header["e_entry"]:
-            return addr
+            return addr + self.image_base()
         else:
             return 0
 
-    def strings(self, min_size=10) -> "set[str]":
-        return utils.strings(self.elf.stream.read(), min_size)
+    def image_base(self) -> int:
+        """Return the imagebase of the ELF file"""
+        if self.elf_image_base is None:
+            load_addresses = [
+                segment["p_vaddr"]
+                for segment in self.elf.iter_segments()
+                if describe_p_type(segment["p_type"]) == "LOAD"
+            ]
+            load_addresses.sort()
+            self.elf_image_base = load_addresses.pop()
+
+        return self.elf_image_base
+
+    def strings(self, min_length=10) -> "set[str]":
+        return utils.strings(self.elf.stream.read(), min_length)
 
     def calculate_sha256(self) -> str:
         return utils.calculate_sha256(self.elf.stream.read())

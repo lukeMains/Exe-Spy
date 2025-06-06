@@ -1,7 +1,8 @@
 import PySide6.QtWidgets as QtWidgets
 
-from .. import pe_file
+from .. import pe_file, elf_file
 from .components import table
+import logging
 
 
 class SectionsView(QtWidgets.QWidget):
@@ -35,7 +36,16 @@ class SectionsView(QtWidgets.QWidget):
 
         self.layout().addWidget(self.sections_table)
 
-    def load(self, pe_obj: pe_file.PEFile):
+    def load(self, exe: pe_file.PEFile | elf_file.ELFFile):
+        logging.getLogger("exespy").debug(f"Loading headers for {exe.__class__}")
+        if isinstance(exe, pe_file.PEFile):
+            logging.getLogger("exespy").debug("Loading PE file!")
+            self.load_pe(exe)
+        elif isinstance(exe, elf_file.ELFFile):
+            logging.getLogger("exespy").debug("Loading ELF file!")
+            self.load_elf(exe)
+
+    def load_pe(self, pe_obj: pe_file.PEFile):
         # Sections
         sections_list = []
         for i, section in enumerate(pe_obj.pe.sections):
@@ -62,3 +72,6 @@ class SectionsView(QtWidgets.QWidget):
         )
 
         self.sections_table.resizeColumnsToContents()
+
+    def load_elf(self, elf_obj: elf_file.ELFFile):
+        pass

@@ -254,7 +254,8 @@ class ExeSpy(QtWidgets.QMainWindow):
             state.tabview.load(self.exe)
         finally:
             # TODO: Disable tabs that don't matter for ELF files
-            state.tabview.set_disabled("resources", disabled=True)
+            state.tabview.set_disabled("Resources", disabled=True)
+            state.tabview.set_disabled("Manifest", disabled=True)
             self.statusBar().clearMessage()
             self.progress_bar.hide()
 

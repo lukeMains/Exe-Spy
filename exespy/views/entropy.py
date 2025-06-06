@@ -8,7 +8,7 @@ from matplotlib.figure import Figure
 
 from exespy import helpers
 
-from .. import pe_file
+from .. import pe_file, elf_file
 from .. import state
 
 
@@ -22,7 +22,7 @@ class EntropyView(QtWidgets.QWidget):
 
         self.loaded = False
 
-        self.pe_obj: pe_file.PEFile = None
+        self.exe: pe_file.PEFile | elf_file.ELFFile = None
         self.heatmap_canvas = None
         self.line_plot_canvas = None
 
@@ -75,10 +75,10 @@ class EntropyView(QtWidgets.QWidget):
 
         self.layout().addWidget(tabs)
 
-    def load_async(self, pe_obj: pe_file.PEFile):
-        self.pe_obj = pe_obj
+    def load_async(self, exe: pe_file.PEFile | elf_file.ELFFile):
+        self.exe = exe
 
-        if pe_obj is None:
+        if exe is None:
             return
 
         self.entropy = []
@@ -91,7 +91,7 @@ class EntropyView(QtWidgets.QWidget):
             self.line_plot_tab.layout().removeWidget(self.line_plot_canvas)
 
         # Calculate entropy from file
-        with io.BytesIO(pe_obj.data) as f:
+        with io.BytesIO(initial_bytes=exe.data) as f:
             data = f.read(self.block_size)
             while data:
                 self.entropy.append(self.calc_entropy(data))
@@ -146,9 +146,9 @@ class EntropyView(QtWidgets.QWidget):
     def enable_tab(self):
         state.tabview.set_loading(self.NAME, False)
 
-    def load(self, pe_obj: pe_file.PEFile):
+    def load(self, exe: pe_file.PEFile | elf_file.ELFFile):
         progress = helpers.progress_dialog("Loading Entropy...", "Loading", self)
-        self.load_async(pe_obj)
+        self.load_async(exe)
         self.load_finalize()
         progress.close()
 
@@ -179,7 +179,7 @@ class EntropyView(QtWidgets.QWidget):
     def handle_block_size_changed(self):
         """Reload the entropy data with the new block size."""
         self.block_size = int(self.block_size_box.currentText())
-        self.load(self.pe_obj)
+        self.load(self.exe)
 
     def handle_info_clicked(self):
         """Show the entropy info dialog."""

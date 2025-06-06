@@ -1,7 +1,8 @@
 import PySide6.QtWidgets as QtWidgets
 
-from .. import pe_file
+from .. import pe_file, elf_file
 from .components import table
+import logging
 
 
 class ExportsView(QtWidgets.QWidget):
@@ -20,7 +21,16 @@ class ExportsView(QtWidgets.QWidget):
         )
         self.layout().addWidget(self.exports_table)
 
-    def load(self, pe_obj: pe_file.PEFile):
+    def load(self, exe: pe_file.PEFile | elf_file.ELFFile):
+        logging.getLogger("exespy").debug(f"Loading headers for {exe.__class__}")
+        if isinstance(exe, pe_file.PEFile):
+            logging.getLogger("exespy").debug("Loading PE file!")
+            self.load_pe(exe)
+        elif isinstance(exe, elf_file.ELFFile):
+            logging.getLogger("exespy").debug("Loading ELF file!")
+            self.load_elf(exe)
+
+    def load_pe(self, pe_obj: pe_file.PEFile):
         # Exports
         exports_list = []
 
@@ -36,3 +46,6 @@ class ExportsView(QtWidgets.QWidget):
         self.exports_table.setModel(
             table.TableModel(exports_list, headers=["Name", "Ordinal", "Address"])
         )
+
+    def load_elf(self, elf_obj: elf_file.ELFFile):
+        pass
